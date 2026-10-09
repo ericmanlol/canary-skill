@@ -46,12 +46,51 @@ test_idempotence() {
     [[ ! "${destination}/${file}" -nt "${TEST_ROOT}/timestamp" ]]
     [[ ! "${destination}/${file}" -ot "${TEST_ROOT}/timestamp" ]]
   done
-  expect_failure env CANARY_NAME=Different bash "${INSTALLER}"
-  [[ "$(cat "${destination}/name.txt")" == sample-user ]]
-  printf '\nLocal change\n' >> "${destination}/SKILL.md"
-  cp "${destination}/SKILL.md" "${TEST_ROOT}/modified-skill"
-  expect_failure bash "${INSTALLER}"
-  cmp "${destination}/SKILL.md" "${TEST_ROOT}/modified-skill"
+}
+
+# Updates preserve names and extra files; explicit names replace saved names.
+# Globals read: INSTALLER, REPO_DIR, TEST_ROOT.
+test_updates() {
+  local root=${TEST_ROOT}/updates destination
+  destination=${root}/canary
+  CANARY_NAME='The Dude' SKILLS_DIR="${root}" \
+    bash "${INSTALLER}" >/dev/null
+  printf 'Older skill\n' > "${destination}/SKILL.md"
+  printf 'keep\n' > "${destination}/notes.txt"
+  touch -t 200001010000 "${TEST_ROOT}/saved-name-time"
+  touch -r "${TEST_ROOT}/saved-name-time" "${destination}/name.txt"
+  USER=Different SKILLS_DIR="${root}" bash "${INSTALLER}" >/dev/null
+  cmp "${REPO_DIR}/skills/canary/SKILL.md" "${destination}/SKILL.md"
+  [[ "$(cat "${destination}/name.txt")" == 'The Dude' ]]
+  [[ ! "${destination}/name.txt" -nt "${TEST_ROOT}/saved-name-time" ]]
+  [[ "$(cat "${destination}/notes.txt")" == keep ]]
+  CANARY_NAME=Neo SKILLS_DIR="${root}" bash "${INSTALLER}" >/dev/null
+  [[ "$(cat "${destination}/name.txt")" == Neo ]]
+  expect_failure env CANARY_NAME='' SKILLS_DIR="${root}" bash "${INSTALLER}"
+  [[ "$(cat "${destination}/name.txt")" == Neo ]]
+}
+
+# Failed staging/publishing must preserve the installed files and allow retry.
+# Globals read: INSTALLER, TEST_ROOT, PATH.
+test_update_failures() {
+  local command root destination bin
+  for command in cp mv; do
+    root=${TEST_ROOT}/update-failure-${command}
+    destination=${root}/canary
+    bin=${TEST_ROOT}/update-bin-${command}
+    CANARY_NAME='The Dude' SKILLS_DIR="${root}" \
+      bash "${INSTALLER}" >/dev/null
+    printf 'Older skill\n' > "${destination}/SKILL.md"
+    mkdir "${bin}"
+    printf '#!/bin/sh\nexit 1\n' > "${bin}/${command}"
+    chmod +x "${bin}/${command}"
+    expect_failure env PATH="${bin}:${PATH}" SKILLS_DIR="${root}" \
+      CANARY_NAME=Neo bash "${INSTALLER}"
+    [[ "$(cat "${destination}/SKILL.md")" == 'Older skill' ]]
+    [[ "$(cat "${destination}/name.txt")" == 'The Dude' ]]
+    [[ -z "$(find "${destination}" -name '.update.*' -print)" ]]
+    SKILLS_DIR="${root}" bash "${INSTALLER}" >/dev/null
+  done
 }
 
 # Verify names are literal data and invalid names cause no installation.
@@ -129,6 +168,8 @@ main() {
   trap cleanup EXIT
   trap 'report_failure "${LINENO}"' ERR
   test_idempotence
+  test_updates
+  test_update_failures
   test_names
   test_paths
   test_rollback

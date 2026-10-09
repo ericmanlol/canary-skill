@@ -28,7 +28,7 @@ Set these environment variables before running a command:
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `CANARY_NAME` | First name or username to use | `$USER` |
+| `CANARY_NAME` | First name or username to use | Saved name on updates; `$USER` on first install |
 | `SKILLS_DIR` | Parent directory for the installed `canary` folder | `~/.agents/skills` |
 | `NO_COLOR=1` | Disable colors | Colors enabled in supported terminals |
 | `FORCE_COLOR=1` | Enable colors in redirected output | Off; `NO_COLOR` takes precedence |
@@ -47,7 +47,18 @@ CANARY_NAME='The Dude' SKILLS_DIR='/path/to/project/.agents/skills' make install
 
 The installed folder contains `SKILL.md` and a personal `name.txt`; your name stays out of the shared source. Edit the installed `name.txt` to change it. Relative `SKILLS_DIR` paths are resolved from your current working directory.
 
-Identical installs succeed without changes. Conflicting or incomplete installations are left untouched and reported as errors.
+Identical installs succeed without changes. Reinstalling updates `SKILL.md` from the repo, replacing any local edits to that file. Your saved name is preserved unless you explicitly set `CANARY_NAME`. Unsafe or incomplete installations are left untouched and reported as errors.
+
+## Update
+
+From your cloned repository:
+
+```sh
+git pull
+make install
+```
+
+Use the same `SKILLS_DIR` if you installed to a custom location. To change your saved name during an update, run `CANARY_NAME='The Dude' make install`.
 
 ## Activation notes
 

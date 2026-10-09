@@ -23,7 +23,7 @@ show_help() {
   printf '\n  CANARY\n'
   color 0
   printf '  Install: bash /path/to/canary-skill/scripts/install.sh\n\n'
-  printf '  CANARY_NAME    Preferred name (default: USER)'
+  printf '  CANARY_NAME    Preferred name (default: installed name, then USER)'
   printf '\n  SKILLS_DIR     Destination (default: ~/.agents/skills)\n'
   printf '  NO_COLOR=1     Disable colors\n'
   printf '  FORCE_COLOR=1  Enable colors in redirected output\n\n'
@@ -41,6 +41,42 @@ validate_name() {
   if [[ ! "${name}" =~ [^[:space:]] ]]; then
     fail 'The name cannot be only whitespace.'
   fi
+}
+
+# Refuse unsafe or incomplete existing installations before reading or writing.
+# Arguments: destination directory. Exits nonzero when validation fails.
+validate_existing() {
+  local destination=$1 file
+  [[ -d "${destination}" && ! -L "${destination}" ]] ||
+    fail "Unsafe installation directory: ${destination}"
+  for file in SKILL.md name.txt; do
+    [[ -f "${destination}/${file}" && ! -L "${destination}/${file}" ]] ||
+      fail "Expected a regular file: ${destination}/${file}"
+  done
+}
+
+# Stage changes before publishing; leave unrelated files and equal files alone.
+# Arguments: destination directory, source skill, preferred name.
+# Name changes require an explicit CANARY_NAME. Renames are atomic per file.
+update_existing() {
+  local destination=$1 source_file=$2 name=$3
+  (
+    local staging
+    staging=$(mktemp -d "${destination}/.update.XXXXXX")
+    trap 'rm -f "${staging}/SKILL.md" "${staging}/name.txt"; \
+      rmdir "${staging}"' EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    cp "${source_file}" "${staging}/SKILL.md"
+    printf '%s\n' "${name}" > "${staging}/name.txt"
+    if ! cmp -s "${staging}/SKILL.md" "${destination}/SKILL.md"; then
+      mv "${staging}/SKILL.md" "${destination}/SKILL.md"
+    fi
+    if [[ ${CANARY_NAME+x} ]] &&
+        ! cmp -s "${staging}/name.txt" "${destination}/name.txt"; then
+      mv "${staging}/name.txt" "${destination}/name.txt"
+    fi
+  )
 }
 
 # Return success only for regular, identical installed files.
@@ -101,10 +137,9 @@ main() {
   fi
   [[ $# -eq 0 ]] || fail 'Unexpected arguments. Use --help.'
 
-  local name=${CANARY_NAME-${USER-}}
+  local name
   local root=${SKILLS_DIR:-${HOME:?HOME must be set}/.agents/skills}
   local script_dir source_file destination
-  validate_name "${name}"
   script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
   source_file=${script_dir}/../skills/canary/SKILL.md
   case "${root}" in
@@ -115,12 +150,26 @@ main() {
   [[ -r "${source_file}" ]] || fail "Cannot read: ${source_file}"
 
   if [[ -e "${destination}" || -L "${destination}" ]]; then
+    validate_existing "${destination}"
+  fi
+  if [[ ${CANARY_NAME+x} ]]; then
+    name=${CANARY_NAME}
+  elif [[ -f "${destination}/name.txt" ]]; then
+    name=$(cat "${destination}/name.txt")
+  else
+    name=${USER-}
+  fi
+  validate_name "${name}"
+
+  if [[ -d "${destination}" ]]; then
     if installation_matches "${destination}" "${source_file}" "${name}"; then
       report_installation 'Canary is already up to date' "${name}" \
         "${destination}"
       return 0
     fi
-    fail "Conflicting installation: ${destination}. Move it before reinstalling."
+    update_existing "${destination}" "${source_file}" "${name}"
+    report_installation 'Canary updated' "${name}" "${destination}"
+    return 0
   fi
   install_new "${destination}" "${source_file}" "${name}"
   report_installation 'Canary installed' "${name}" "${destination}"
