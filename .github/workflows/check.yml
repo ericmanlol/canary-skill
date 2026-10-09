@@ -1,0 +1,24 @@
+name: Check
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax and behavior
+        run: make check
+      - name: Install ShellCheck
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install shellcheck
+          else
+            sudo apt-get update
+            sudo apt-get install -y shellcheck
+          fi
+      - name: Lint Bash
+        run: make lint
