@@ -59,6 +59,8 @@ test_idempotence() {
 test_names() {
   local name long_name
   local root=${TEST_ROOT}/skills\ with\ spaces
+  # Keep command-substitution syntax literal to test safe name handling.
+  # shellcheck disable=SC2016
   local literal='The Dude "Ace" $(touch SHOULD_NOT_EXIST)'
   CANARY_NAME="${literal}" SKILLS_DIR="${root}" \
     bash "${INSTALLER}" >/dev/null
@@ -111,11 +113,11 @@ test_rollback() {
 # Check forced colors and their suppression without depending on a real TTY.
 # Globals read: INSTALLER, NO_COLOR.
 test_colors() {
-  NO_COLOR= FORCE_COLOR=1 bash "${INSTALLER}" --help > color
+  NO_COLOR='' FORCE_COLOR=1 bash "${INSTALLER}" --help > color
   FORCE_COLOR=1 bash "${INSTALLER}" --help > plain
-  NO_COLOR= FORCE_COLOR=0 TERM=dumb bash "${INSTALLER}" --help > dumb
+  NO_COLOR='' FORCE_COLOR=0 TERM=dumb bash "${INSTALLER}" --help > dumb-output.txt
   grep -q $'\033' color
-  if grep -q $'\033' plain || grep -q $'\033' dumb; then
+  if grep -q $'\033' plain || grep -q $'\033' dumb-output.txt; then
     printf 'Color controls were ignored.\n' >&2
     exit 1
   fi
