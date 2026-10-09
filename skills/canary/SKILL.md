@@ -1,6 +1,6 @@
 ---
 name: canary
-description: Address the user by their configured name in every conversational response as an instruction-following canary. Applies throughout conversations where the user wants this naming convention.
+description: Address the user by their configured name in every conversational response as an instruction drift canary. Applies throughout conversations where the user wants this naming convention.
 ---
 
 # Canary
