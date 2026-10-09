@@ -21,7 +21,7 @@ To choose a different skills directory, including a project's skills folder:
 CANARY_NAME='The Dude' SKILLS_DIR='/path/to/project/.agents/skills' make install
 ```
 
-Repeated installs with identical skill contents and the same name succeed without rewriting files. Conflicting or incomplete installations are left untouched and reported as errors. To change your name, edit the installed `name.txt`. To uninstall, remove only the installed `canary` folder.
+Repeated installs with identical skill contents and the same name succeed without rewriting files. Conflicting or incomplete installations are left untouched and reported as errors. To change your name, edit the installed `name.txt`.
 
 ## Activate
 
@@ -48,9 +48,11 @@ canary-skill/
 ├── Makefile
 ├── README.md
 ├── scripts/
-│   └── install.sh
+│   ├── install.sh
+│   └── uninstall.sh
 ├── tests/
-│   └── install_test.sh
+│   ├── install_test.sh
+│   └── uninstall_test.sh
 └── skills/
     └── canary/
         └── SKILL.md
@@ -77,3 +79,17 @@ CANARY_NAME='The Dude' bash /path/to/canary-skill/scripts/install.sh
 The source skill is resolved relative to the installer. A relative `SKILLS_DIR` is resolved relative to your current working directory. `make check` includes Bash syntax checks; `make lint` requires ShellCheck installed on your development machine. GitHub Actions is configured to run both on Linux and macOS; adding the workflow does not establish that either remote job has passed.
 
 The default destination is `~/.agents/skills`. Set `SKILLS_DIR` to override it.
+
+## Uninstall
+
+```sh
+make uninstall
+# For a custom installation, use the same SKILLS_DIR as when installing:
+SKILLS_DIR='/path/to/project/.agents/skills' make uninstall
+```
+
+Without Make, run `bash /path/to/canary-skill/scripts/uninstall.sh` from any directory. The default is `~/.agents/skills/canary/`; this command does not search other installation locations.
+
+Uninstall succeeds if Canary is already absent. It removes only `SKILL.md` and `name.txt`, including any edits to those files, then removes the Canary directory if empty. Extra files and directories are preserved and reported. Symlinked installation directories or known files are refused before deleting anything. Other installed skills are untouched.
+
+`make check` also tests uninstall defaults, custom paths, repeat removal, extra-file preservation, and refusal of symlinks or unexpected file types.
