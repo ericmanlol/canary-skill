@@ -6,7 +6,7 @@ This is an instruction drift canary, not a hallucination detector. A missing nam
 
 ## Quick start
 
-Requires Git, Bash, Make, and standard Unix utilities for the commands below. Installation without Make is described later.
+Requires Git, Bash, Make, and standard Unix utilities for the commands below.
 
 ```sh
 git clone https://github.com/ericmanlol/canary-skill.git
@@ -22,38 +22,58 @@ Use $canary throughout this conversation. Explain what a Git branch is.
 
 The response should address you by your username. Follow up with other prompts to check whether the convention continues.
 
-### Installation options
+## Configuration
 
-To use a preferred name, replace `make install` above with:
+Set these environment variables before running a command:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `CANARY_NAME` | First name or username to use | `$USER` |
+| `SKILLS_DIR` | Parent directory for the installed `canary` folder | `~/.agents/skills` |
+| `NO_COLOR=1` | Disable colors | Colors enabled in supported terminals |
+| `FORCE_COLOR=1` | Enable colors in redirected output | Off; `NO_COLOR` takes precedence |
+
+To use a preferred name, replace `make install` in the quick start with:
 
 ```sh
 CANARY_NAME='The Dude' make install
 ```
 
-The installer creates `~/.agents/skills/canary/` with `SKILL.md` and a local `name.txt`. Your name is never written into the shared source. Names and paths are passed through quoted shell variables.
-
-To choose a different skills directory, including a project's skills folder:
+For a project-specific installation:
 
 ```sh
 CANARY_NAME='The Dude' SKILLS_DIR='/path/to/project/.agents/skills' make install
 ```
 
-Repeated installs with identical skill contents and the same name succeed without rewriting files. Conflicting or incomplete installations are left untouched and reported as errors. To change your name, edit the installed `name.txt`.
+The installed folder contains `SKILL.md` and a personal `name.txt`; your name stays out of the shared source. Edit the installed `name.txt` to change it. Relative `SKILLS_DIR` paths are resolved from your current working directory.
 
-## Activate
+Identical installs succeed without changes. Conflicting or incomplete installations are left untouched and reported as errors.
 
-Mention `$canary` in Codex CLI or the IDE, or select the Canary skill in your app's skill picker, and ask it to use the convention throughout your conversation.
+## Activation notes
 
-Skills are selected on demand; installing one does not guarantee it is loaded on every turn. For a standing convention, add a short instruction to your existing agent instructions, such as: "Use the canary skill for every conversational response." This installer does not edit your agent instructions.
+Use the quick-start prompt or select Canary in your app's skill picker. Installation alone does not guarantee activation on every turn. For a standing convention, you can add “Use the canary skill for every conversational response” to your existing agent instructions; the installer does not edit them.
 
-Strict output formats may legitimately omit a salutation. Treat an absent name as a reason to inspect context and instruction adherence, not as a diagnosis.
+Strict output formats may legitimately omit a salutation. See the [official skills documentation](https://learn.chatgpt.com/docs/build-skills) for discovery and invocation details.
 
-See the [official skills documentation](https://learn.chatgpt.com/docs/build-skills) for discovery and invocation behavior.
+## Uninstall
+
+```sh
+make uninstall
+```
+
+For a custom installation, use the same `SKILLS_DIR` as when installing:
+
+```sh
+SKILLS_DIR='/path/to/project/.agents/skills' make uninstall
+```
+
+Uninstall removes only `SKILL.md` and `name.txt`, including edits to those files, then removes the Canary folder if empty. Extra files are preserved and reported. Symlinked installations or known files are refused. Repeated removal succeeds if Canary is already absent. Other installation locations are not searched.
 
 ## Layout
 
 ```text
 canary-skill/
+├── LICENSE
 ├── Makefile
 ├── README.md
 ├── scripts/
@@ -67,38 +87,15 @@ canary-skill/
         └── SKILL.md
 ```
 
-The Bash installer handles installation: it selects a name from `CANARY_NAME`, falling back to `USER`, and copies the skill to the configured destination. For a manual installation, copy `skills/canary` into your skills directory and add a `name.txt` containing your preferred name.
-
-Run `make` for a colored command guide. Colors are automatic in terminals; use `NO_COLOR=1` to disable them or `FORCE_COLOR=1` to keep them in redirected output. No Python or runtime package dependencies are needed.
-
 ## Development
 
-Run `make check` to exercise installation in temporary directories. It verifies default and custom names, paths with spaces, literal shell syntax, conflict protection and repeat-install idempotence, invalid input, cleanup after a simulated copy failure, and color controls. It does not touch your installed skills.
-
-Scripts follow the applicable conventions in [Google's Shell Style Guide](https://google.github.io/styleguide/shellguide.html): Bash, quoted variable expansions, readable control flow, built-ins for validation, and errors on stderr. Google does not list a dedicated Makefile style guide; The Makefile only provides command shortcuts.
-
-Installation reserves a new destination, writes the name, and publishes `SKILL.md` last. Failed writes clean up the partial installation so you can retry. This is not a filesystem transaction: an uncatchable termination or power loss may still require removing the partial folder.
-
-You can also install without Make, from any working directory:
-
 ```sh
-CANARY_NAME='The Dude' bash /path/to/canary-skill/scripts/install.sh
+make check  # Bash syntax and isolated install/uninstall tests
+make lint   # Requires ShellCheck
 ```
 
-The source skill is resolved relative to the installer. A relative `SKILLS_DIR` is resolved relative to your current working directory. `make check` includes Bash syntax checks; `make lint` requires ShellCheck installed on your development machine. GitHub Actions is configured to run both on Linux and macOS; adding the workflow does not establish that either remote job has passed.
+Tests cover repeat operations, configuration, invalid input, failure cleanup, symlinks, extra-file preservation, and color controls without touching your installed skills. GitHub Actions runs checks and lint on Linux and macOS.
 
-The default destination is `~/.agents/skills`. Set `SKILLS_DIR` to override it.
+## License
 
-## Uninstall
-
-```sh
-make uninstall
-# For a custom installation, use the same SKILLS_DIR as when installing:
-SKILLS_DIR='/path/to/project/.agents/skills' make uninstall
-```
-
-Without Make, run `bash /path/to/canary-skill/scripts/uninstall.sh` from any directory. The default is `~/.agents/skills/canary/`; this command does not search other installation locations.
-
-Uninstall succeeds if Canary is already absent. It removes only `SKILL.md` and `name.txt`, including any edits to those files, then removes the Canary directory if empty. Extra files and directories are preserved and reported. Symlinked installation directories or known files are refused before deleting anything. Other installed skills are untouched.
-
-`make check` also tests uninstall defaults, custom paths, repeat removal, extra-file preservation, and refusal of symlinks or unexpected file types.
+[MIT](LICENSE).
