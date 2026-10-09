@@ -33,7 +33,7 @@ expect_failure() {
 # Verify defaults, foreign working directory, and no rewrites on repeat installs.
 # Globals read: INSTALLER, REPO_DIR, HOME, TEST_ROOT.
 test_idempotence() {
-  local destination=${HOME}/.codex/skills/canary
+  local destination=${HOME}/.agents/skills/canary
   bash "${INSTALLER}" >/dev/null
   [[ "$(cat "${destination}/name.txt")" == sample-user ]]
   cmp "${REPO_DIR}/skills/canary/SKILL.md" "${destination}/SKILL.md"

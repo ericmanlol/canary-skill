@@ -24,7 +24,7 @@ show_help() {
   color 0
   printf '  Install: bash /path/to/canary-skill/scripts/install.sh\n\n'
   printf '  CANARY_NAME    Preferred name (default: USER)'
-  printf '\n  SKILLS_DIR     Destination (default: CODEX_HOME/skills or ~/.codex/skills)\n'
+  printf '\n  SKILLS_DIR     Destination (default: ~/.agents/skills)\n'
   printf '  NO_COLOR=1     Disable colors\n'
   printf '  FORCE_COLOR=1  Enable colors in redirected output\n\n'
   printf "  Example: CANARY_NAME='Alex' bash scripts/install.sh\n\n"
@@ -102,8 +102,7 @@ main() {
   [[ $# -eq 0 ]] || fail 'Unexpected arguments. Use --help.'
 
   local name=${CANARY_NAME-${USER-}}
-  local codex_home=${CODEX_HOME:-${HOME:?HOME must be set}/.codex}
-  local root=${SKILLS_DIR:-${codex_home}/skills}
+  local root=${SKILLS_DIR:-${HOME:?HOME must be set}/.agents/skills}
   local script_dir source_file destination
   validate_name "${name}"
   script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)

@@ -13,7 +13,7 @@ make install                          # Uses $USER as your name
 CANARY_NAME='Alex' make install        # Use a first name or preferred username
 ```
 
-The installer creates `~/.codex/skills/canary/` with `SKILL.md` and a local `name.txt`. Your name is never written into the shared source. Names and paths are passed through quoted shell variables.
+The installer creates `~/.agents/skills/canary/` with `SKILL.md` and a local `name.txt`. Your name is never written into the shared source. Names and paths are passed through quoted shell variables.
 
 To choose a different skills directory, including a project's skills folder:
 
@@ -68,4 +68,4 @@ CANARY_NAME='Alex' bash /path/to/canary-skill/scripts/install.sh
 
 The source skill is resolved relative to the installer. A relative `SKILLS_DIR` is resolved relative to your current working directory. `make check` includes Bash syntax checks; `make lint` requires ShellCheck installed on your development machine. GitHub Actions is configured to run both on Linux and macOS; adding the workflow does not establish that either remote job has passed.
 
-The default destination follows the bundled Codex skill installer: `$CODEX_HOME/skills` when `CODEX_HOME` is set, otherwise `~/.codex/skills`. `SKILLS_DIR` overrides either. Public documentation also lists `~/.agents/skills`, but discovery can differ by client; this repository targets the bundled installer's location. After installation, try a new turn or new chat. If discovery is stale, restart the app. For an immediate explicit test, give the agent the full installed `SKILL.md` path and ask it to read that file and its adjacent `name.txt`.
+The default destination is `~/.agents/skills`. Set `SKILLS_DIR` to override it.
