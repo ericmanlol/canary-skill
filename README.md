@@ -2,15 +2,32 @@
 
 A tiny agent skill that asks the agent to address you by your first name or username in every conversational response. A missing name is a visible cue to check whether your instructions are still being followed.
 
-This is an instruction-following canary, not a hallucination detector. An agent can use your name and still be wrong, or omit it while answering correctly.
+This is an instruction drift canary, not a hallucination detector. A missing name may signal that the agent has stopped following the convention; it doesn’t establish whether its answer is correct.
 
-## Install
+## Quick start
 
-Requires Bash and standard Unix utilities. GNU Make is optional. From this repository:
+Requires Git, Bash, Make, and standard Unix utilities for the commands below. Installation without Make is described later.
 
 ```sh
-make install                          # Uses $USER as your name
-CANARY_NAME='The Dude' make install        # Use a first name or preferred username
+git clone https://github.com/ericmanlol/canary-skill.git
+cd canary-skill
+make install
+```
+
+This uses `$USER` as your name. In a new Codex chat, send:
+
+```text
+Use $canary throughout this conversation. Explain what a Git branch is.
+```
+
+The response should address you by your username. Follow up with other prompts to check whether the convention continues.
+
+### Installation options
+
+To use a preferred name, replace `make install` above with:
+
+```sh
+CANARY_NAME='The Dude' make install
 ```
 
 The installer creates `~/.agents/skills/canary/` with `SKILL.md` and a local `name.txt`. Your name is never written into the shared source. Names and paths are passed through quoted shell variables.
@@ -24,14 +41,6 @@ CANARY_NAME='The Dude' SKILLS_DIR='/path/to/project/.agents/skills' make install
 Repeated installs with identical skill contents and the same name succeed without rewriting files. Conflicting or incomplete installations are left untouched and reported as errors. To change your name, edit the installed `name.txt`.
 
 ## Activate
-
-After installing, try this prompt in a new Codex chat:
-
-```text
-Use $canary throughout this conversation. Explain what a Git branch is.
-```
-
-The response should address you by the name chosen during installation. Follow up with other prompts to check whether the convention continues.
 
 Mention `$canary` in Codex CLI or the IDE, or select the Canary skill in your app's skill picker, and ask it to use the convention throughout your conversation.
 
