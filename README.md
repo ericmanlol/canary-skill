@@ -10,7 +10,7 @@ Requires Bash and standard Unix utilities. GNU Make is optional. From this repos
 
 ```sh
 make install                          # Uses $USER as your name
-CANARY_NAME='Alex' make install        # Use a first name or preferred username
+CANARY_NAME='The Dude' make install        # Use a first name or preferred username
 ```
 
 The installer creates `~/.agents/skills/canary/` with `SKILL.md` and a local `name.txt`. Your name is never written into the shared source. Names and paths are passed through quoted shell variables.
@@ -18,12 +18,20 @@ The installer creates `~/.agents/skills/canary/` with `SKILL.md` and a local `na
 To choose a different skills directory, including a project's skills folder:
 
 ```sh
-CANARY_NAME='Alex' SKILLS_DIR='/path/to/project/.agents/skills' make install
+CANARY_NAME='The Dude' SKILLS_DIR='/path/to/project/.agents/skills' make install
 ```
 
 Repeated installs with identical skill contents and the same name succeed without rewriting files. Conflicting or incomplete installations are left untouched and reported as errors. To change your name, edit the installed `name.txt`. To uninstall, remove only the installed `canary` folder.
 
 ## Activate
+
+After installing, try this prompt in a new Codex chat:
+
+```text
+Use $canary throughout this conversation. Explain what a Git branch is.
+```
+
+The response should address you by the name chosen during installation. Follow up with other prompts to check whether the convention continues.
 
 Mention `$canary` in Codex CLI or the IDE, or select the Canary skill in your app's skill picker, and ask it to use the convention throughout your conversation.
 
@@ -63,7 +71,7 @@ Installation reserves a new destination, writes the name, and publishes `SKILL.m
 You can also install without Make, from any working directory:
 
 ```sh
-CANARY_NAME='Alex' bash /path/to/canary-skill/scripts/install.sh
+CANARY_NAME='The Dude' bash /path/to/canary-skill/scripts/install.sh
 ```
 
 The source skill is resolved relative to the installer. A relative `SKILLS_DIR` is resolved relative to your current working directory. `make check` includes Bash syntax checks; `make lint` requires ShellCheck installed on your development machine. GitHub Actions is configured to run both on Linux and macOS; adding the workflow does not establish that either remote job has passed.

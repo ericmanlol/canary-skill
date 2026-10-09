@@ -59,13 +59,13 @@ test_idempotence() {
 test_names() {
   local name long_name
   local root=${TEST_ROOT}/skills\ with\ spaces
-  local literal='Alex "Ace" $(touch SHOULD_NOT_EXIST)'
+  local literal='The Dude "Ace" $(touch SHOULD_NOT_EXIST)'
   CANARY_NAME="${literal}" SKILLS_DIR="${root}" \
     bash "${INSTALLER}" >/dev/null
   [[ "$(cat "${root}/canary/name.txt")" == "${literal}" ]]
   [[ ! -e SHOULD_NOT_EXIST ]]
   long_name=$(printf '%101s' x)
-  for name in '' '   ' $'Alex\nOther' $'Alex\tOther' "${long_name}"; do
+  for name in '' '   ' $'The Dude\nOther' $'The Dude\tOther' "${long_name}"; do
     expect_failure env CANARY_NAME="${name}" \
       SKILLS_DIR="${TEST_ROOT}/invalid" bash "${INSTALLER}"
   done

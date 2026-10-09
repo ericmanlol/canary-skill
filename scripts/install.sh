@@ -27,7 +27,7 @@ show_help() {
   printf '\n  SKILLS_DIR     Destination (default: ~/.agents/skills)\n'
   printf '  NO_COLOR=1     Disable colors\n'
   printf '  FORCE_COLOR=1  Enable colors in redirected output\n\n'
-  printf "  Example: CANARY_NAME='Alex' bash scripts/install.sh\n\n"
+  printf "  Example: CANARY_NAME='The Dude' bash scripts/install.sh\n\n"
 }
 
 validate_name() {
